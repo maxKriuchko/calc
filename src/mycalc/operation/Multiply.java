@@ -1,4 +1,4 @@
-package mycalc;
+package mycalc.operation;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,7 +14,7 @@ public class Multiply extends BaseOperation implements Operand {
     }
 
     @Override
-    public int value() {
+    public long value() {
         return left.value() * right.value();
     }
 }

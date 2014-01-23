@@ -1,6 +1,7 @@
 package mycalc;
 
 import junit.framework.Assert;
+import mycalc.operation.*;
 import org.junit.Test;
 
 /**

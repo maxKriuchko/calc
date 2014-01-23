@@ -1,4 +1,4 @@
-package mycalc;
+package mycalc.operation;
 
 /**
  * Created with IntelliJ IDEA.

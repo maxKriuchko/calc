@@ -1,4 +1,4 @@
-package mycalc;
+package mycalc.operation;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,7 +15,7 @@ public class Constant implements Operand {
     }
 
     @Override
-    public int value() {
+    public long value() {
         return value;
     }
 }

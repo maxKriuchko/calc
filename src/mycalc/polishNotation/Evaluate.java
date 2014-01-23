@@ -1,10 +1,10 @@
-package polishNotation;
+package mycalc.polishNotation;
 
+import mycalc.operation.*;
 import stack.LinkedStack;
 
 import java.util.ArrayList;
-
-import mycalc.*;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,12 +14,7 @@ import mycalc.*;
  * To change this template use File | Settings | File Templates.
  */
 public class Evaluate {
-    public static int[] values = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    private static String function = "(8+2*5)/(1+3*2-4)";
-    private static String function1 = "100000*x*x*x*x*x*x/(x-1)";
-//    private static String function2 = "100000*2*2*2*2*2*2/(1-1)";
     private static LinkedStack operations = new LinkedStack();
-    private static ArrayList<String> polishList = new ArrayList<String>();
     private static LinkedStack calculator = new LinkedStack();
 
     private static int priority (char c) {
@@ -40,14 +35,13 @@ public class Evaluate {
     private static int getStackElemPriority() {
         int priority = 0;
         try {
-            priority = priority((Character) operations.peek());
+            priority = Evaluate.priority((Character) operations.peek());
         }catch (Exception e) {
-//            System.out.println("Stack is null");
         }
         return priority;
     }
 
-    private static void stackOperation(String c) {
+    private void stackOperation(String c) {
         Operand right = (Operand) calculator.pop();
         Operand left = (Operand) calculator.pop();
         if (c.equals("*")) {
@@ -64,55 +58,44 @@ public class Evaluate {
         }
     }
 
-    private static String concatenate(ArrayList<Character> list) {
-        String a = "";
-        for (int item =0; item < list.size(); item ++) {
-            a +=list.get(item);
-        }
-        return a;
-    }
-
-    public static boolean isInteger(String s) {
-        try {
-            Integer.parseInt(s);
-        } catch(NumberFormatException e) {
-            return false;
-        }
-        return true;
-    }
-    private static int StringEvaluation(String function){
-        ArrayList<Character> newChar = new ArrayList();
+    public List<Object> stringToPolish(String function){
+        List<Object> polishList = new ArrayList<Object>();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < function.length(); i++) {
             char c = function.charAt(i);
             if (Character.isDigit(c)) {
                 for (int j = i; j < function.length(); j++) {
                     char c1 = function.charAt(j);
                     if (Character.isDigit(c1)) {
-                        newChar.add(c1);
+                        sb.append(c1);
                     } else {
-                        polishList.add(concatenate(newChar));
-                        newChar.clear();
+                        String fullToken = sb.toString();
+                        Integer tokenNumeric = Integer.parseInt(fullToken);
+                        polishList.add(tokenNumeric);
+                        sb.delete(0, sb.length());
                         i = j - 1;
                         break;
                     }
                 }
+            } else if (Character.isLetter(c)){
+                polishList.add(String.valueOf(c));
             }
             else {
                 if (c == '(') {
                     operations.push(c);
                 }
                 else if (c == ')') {
-                    while (getStackElemPriority() > 1) {
+                    while (this.getStackElemPriority() > 1) {
                         polishList.add(String.valueOf(operations.pop()));
                     }
                     operations.pop();
                 }
                 else if (operations.size() >= 0 &&
-                        getStackElemPriority() <= priority(c)) {
+                        this.getStackElemPriority() <= priority(c)) {
                     operations.push(c);
                 }
-                else if (getStackElemPriority() >= priority(c)) {
-                    while (getStackElemPriority() >= priority(c)) {
+                else if (this.getStackElemPriority() > priority(c)) {
+                    while (this.getStackElemPriority() > priority(c)) {
                         polishList.add(String.valueOf(operations.pop()));
                     }
                     operations.push(c);
@@ -122,29 +105,23 @@ public class Evaluate {
         while (!operations.isEmpty()){
             polishList.add(String.valueOf(operations.pop()));
         }
-        for (int item=0; item < polishList.size(); item ++) {
-            if (isInteger(polishList.get(item))) {
-                calculator.push(new Constant(Integer.parseInt(polishList.get(item))));
-            }
-            else {
-                stackOperation(polishList.get(item));
-            }
-        }
-
-        return ((Operand) calculator.peek()).value();
+        return polishList;
     }
 
-
-
-    public static void main(String[] args){
-//        int result = StringEvaluation(function2);
-//        System.out.println(result);
-        for (int item = 0; item < values.length; item ++) {
-            String newString = function1.replace("x", String.valueOf(values[item]));
-//            System.out.println(newString);
-            int result = StringEvaluation(newString);
-            System.out.println("x=" + values[item] + " f(x)=" + result);
+    public Operand calculator(Iterable<Object> a) {
+        for (Object token : a) {
+            if (token instanceof Integer) {
+                calculator.push(new Constant((Integer)token));
+            } else if(token instanceof String) {
+                String castedToken = (String) token;
+                if (castedToken.matches("[A-Za-z]")) {
+                    calculator.push(new Variable(castedToken));
+                }
+                else {
+                    stackOperation(castedToken);
+                }
+            }
         }
+        return (Operand) calculator.peek();
     }
 }
-

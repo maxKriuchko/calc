@@ -1,4 +1,4 @@
-package mycalc;
+package mycalc.operation;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,12 +14,7 @@ public class Divide extends BaseOperation implements Operand {
     }
 
     @Override
-    public int value() throws ArithmeticException{
-        try {
-            return left.value()/right.value();
-        } catch (ArithmeticException e) {
-            System.out.println("Division by zero.");
-            throw new ArithmeticException();
-        }
+    public long value() throws ArithmeticException{
+        return left.value()/right.value();
     }
 }

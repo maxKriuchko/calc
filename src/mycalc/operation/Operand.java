@@ -1,4 +1,4 @@
-package mycalc;
+package mycalc.operation;
 
 /**
  * Created with IntelliJ IDEA.
@@ -8,6 +8,6 @@ package mycalc;
  * To change this template use File | Settings | File Templates.
  */
 public interface Operand {
-    public int value();
+    public long value();
 
 }
