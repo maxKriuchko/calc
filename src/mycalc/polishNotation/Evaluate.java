@@ -1,5 +1,6 @@
 package mycalc.polishNotation;
 
+import mycalc.exceptions.WrongArgumentException;
 import mycalc.operation.*;
 import stack.LinkedStack;
 
@@ -17,89 +18,93 @@ public class Evaluate {
     private static LinkedStack operations = new LinkedStack();
     private static LinkedStack calculator = new LinkedStack();
 
-    private static int priority (char c) {
-        switch (c) {
-            case '*':
-            case '/':
-                return 3;
-            case '+':
-            case '-':
-                return 2;
-            case '(':
-                return 1;
-            default:
-                return 0;
+    private static int currentPriority(String c) {
+        if (c.equals("*") || c.equals("/")) {
+            return 3;
+        } else if (c.equals("+") || c.equals("-")) {
+            return 2;
+        } else if (c.equals("(")) {
+            return 1;
+        } else {
+            return 0;
         }
     }
 
-    private static int getStackElemPriority() {
-        int priority = 0;
-        try {
-            priority = Evaluate.priority((Character) operations.peek());
-        }catch (Exception e) {
-        }
-        return priority;
-    }
-
-    private void stackOperation(String c) {
-        Operand right = (Operand) calculator.pop();
-        Operand left = (Operand) calculator.pop();
+    public Operand stackOperation(String c, Operand left, Operand right) {
         if (c.equals("*")) {
-            calculator.push(new Multiply(left, right));
-
+            return new Multiply(left, right);
         } else if (c.equals("+")) {
-            calculator.push(new Plus(left, right));
+            return new Plus(left, right);
 
         } else if (c.equals("/")) {
-            calculator.push(new Divide(left, right));
+            return new Divide(left, right);
 
         } else if (c.equals("-")) {
-            calculator.push(new Minus(left, right));
+            return new Minus(left, right);
+        } else {
+            throw new WrongArgumentException("Wrong argument");
         }
     }
 
-    public List<Object> stringToPolish(String function){
-        List<Object> polishList = new ArrayList<Object>();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < function.length(); i++) {
-            char c = function.charAt(i);
-            if (Character.isDigit(c)) {
-                for (int j = i; j < function.length(); j++) {
-                    char c1 = function.charAt(j);
-                    if (Character.isDigit(c1)) {
-                        sb.append(c1);
-                    } else {
-                        String fullToken = sb.toString();
-                        Integer tokenNumeric = Integer.parseInt(fullToken);
-                        polishList.add(tokenNumeric);
-                        sb.delete(0, sb.length());
-                        i = j - 1;
-                        break;
-                    }
-                }
-            } else if (Character.isLetter(c)){
-                polishList.add(String.valueOf(c));
+
+    public boolean isOperator(String c) {
+        return c.equals("+") || c.equals("-") || c.equals("*") || c.equals("/") ||  c.equals("(") ||  c.equals(")");
+    }
+
+    public boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+        } catch(NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public List<String> split(String function) {
+        List<String> list = new ArrayList<String>();
+        String[] string = function.split("(?<=[-+*/()])|(?=[-+*/()])");
+        for(String s : string) {
+            if(s != null && s.length() > 0) {
+                list.add(s);
             }
-            else {
-                if (c == '(') {
-                    operations.push(c);
+        }
+        return list;
+    }
+
+    private int stackElementPriority() {
+        int stackElementPriority = 0;
+        if (operations.peek() != null) {
+            return Evaluate.currentPriority((String) operations.peek());
+        }
+        return stackElementPriority;
+    }
+
+
+    public List<String> stringToPolish(String function){
+        List<String> polishList = new ArrayList<String>();
+        List<String> elements = split(function);
+        for (String s: elements) {
+            if (isOperator(s)) {
+                if (s.equals("(")) {
+                    operations.push(s);
                 }
-                else if (c == ')') {
-                    while (this.getStackElemPriority() > 1) {
+                else if (s.equals(")")) {
+                    while (stackElementPriority() > 1) {
                         polishList.add(String.valueOf(operations.pop()));
                     }
                     operations.pop();
                 }
-                else if (operations.size() >= 0 &&
-                        this.getStackElemPriority() <= priority(c)) {
-                    operations.push(c);
+                else if (stackElementPriority() <= currentPriority(s)) {
+                    operations.push(s);
                 }
-                else if (this.getStackElemPriority() > priority(c)) {
-                    while (this.getStackElemPriority() > priority(c)) {
+                else if (stackElementPriority() > currentPriority(s)) {
+                    while (stackElementPriority() >= currentPriority(s)) {
                         polishList.add(String.valueOf(operations.pop()));
                     }
-                    operations.push(c);
+                    operations.push(s);
                 }
+            } else {
+                polishList.add(s);
             }
         }
         while (!operations.isEmpty()){
@@ -108,18 +113,16 @@ public class Evaluate {
         return polishList;
     }
 
-    public Operand calculator(Iterable<Object> a) {
-        for (Object token : a) {
-            if (token instanceof Integer) {
-                calculator.push(new Constant((Integer)token));
-            } else if(token instanceof String) {
-                String castedToken = (String) token;
-                if (castedToken.matches("[A-Za-z]")) {
-                    calculator.push(new Variable(castedToken));
-                }
-                else {
-                    stackOperation(castedToken);
-                }
+    public Operand calculator(Iterable<String> a) {
+        for (String token: a) {
+            if (isInteger(token)) {
+                calculator.push(new Constant(Integer.valueOf(token)));
+            } else if (isOperator(token)) {
+                Operand right = (Operand) calculator.pop();
+                Operand left = (Operand) calculator.pop();
+                calculator.push(stackOperation(token, left, right));
+            } else {
+                calculator.push(new Variable(token));
             }
         }
         return (Operand) calculator.peek();

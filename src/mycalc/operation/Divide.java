@@ -1,5 +1,7 @@
 package mycalc.operation;
 
+import mycalc.exceptions.DivisonByZeroException;
+
 /**
  * Created with IntelliJ IDEA.
  * User: mkruichko
@@ -14,7 +16,11 @@ public class Divide extends BaseOperation implements Operand {
     }
 
     @Override
-    public long value() throws ArithmeticException{
-        return left.value()/right.value();
+    public long value() throws DivisonByZeroException{
+        long divisor = right.value();
+        if (divisor == 0) {
+            throw new DivisonByZeroException("Division by zero");
+        }
+        return left.value()/divisor;
     }
 }

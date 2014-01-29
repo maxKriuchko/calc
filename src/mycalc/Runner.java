@@ -1,5 +1,6 @@
 package mycalc;
 
+import mycalc.exceptions.DivisonByZeroException;
 import mycalc.operation.Operand;
 import mycalc.operation.Variable;
 import mycalc.polishNotation.Evaluate;
@@ -19,7 +20,7 @@ public class Runner {
     private static String function1 = "100000*x*x*x*x*x*x/(x-1)";
     public static void main(String[] args) {
         Evaluate eval = new Evaluate();
-        List<Object> result = eval.stringToPolish(function1);
+        List<String> result = eval.stringToPolish(function1);
         Operand operand = eval.calculator(result);
         for (int item: values) {
             Variable.myMap.put("x", item);
@@ -30,8 +31,8 @@ public class Runner {
                 } else {
                     System.out.printf("x=" + item + " f(x)=" + "overloading" + "\n");
                 }
-            } catch (ArithmeticException e) {
-                System.out.printf("x=" + item + " f(x)=" + "Divided by zero" + "\n");
+            } catch (DivisonByZeroException e) {
+                System.out.printf("x=" + item + " f(x)=" + e.getMessage() + "\n");
             }
         }
     }
